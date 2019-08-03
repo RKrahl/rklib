@@ -1,5 +1,5 @@
 %bcond_with tests
-%global distname $distname
+%global distname rklib
 
 Name:		python3-%{distname}
 Version:	$version

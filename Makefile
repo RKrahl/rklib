@@ -15,7 +15,7 @@ clean:
 
 distclean: clean
 	rm -f MANIFEST .version
-	rm -f $distname/__init__.py
+	rm -f rklib/__init__.py
 	rm -rf dist
 
 

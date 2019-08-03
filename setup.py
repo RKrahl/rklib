@@ -87,7 +87,7 @@ class build_py(distutils.command.build_py.build_py):
 
 
 setup(
-    name = "$distname",
+    name = "rklib",
     version = version,
     description = doclines[0],
     long_description = "\n".join(doclines[2:]),
@@ -96,7 +96,7 @@ setup(
     url = "https://github.com/RKrahl",
     license = "Apache-2.0",
     requires = [],
-    packages = ["$distname"],
+    packages = ["rklib"],
     classifiers = [
         "Development Status :: 1 - Planning",
         # "Intended Audience :: ?",
