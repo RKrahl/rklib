@@ -1,0 +1,6 @@
+include .version
+include LICENSE.txt
+include MANIFEST.in
+include README.rst
+include tests/pytest.ini
+include tests/test_*.py
