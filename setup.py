@@ -1,7 +1,7 @@
-"""A skeleton for a Python package
+"""A collection of Python library modules
 
-This package itself does nothing useful.  It is a skeleton of a Python
-package that may be used as a starting point to create a new package.
+This package provides a collection of small helper functions and
+classes.
 """
 
 import distutils.command.build_py
@@ -93,7 +93,7 @@ setup(
     long_description = "\n".join(doclines[2:]),
     author = "Rolf Krahl",
     author_email = "rolf@rotkraut.de",
-    url = "https://github.com/RKrahl",
+    url = "https://github.com/RKrahl/rklib",
     license = "Apache-2.0",
     requires = [],
     packages = ["rklib"],

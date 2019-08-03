@@ -1,13 +1,8 @@
-A skeleton for a Python package
-===============================
+A collection of Python library modules
+======================================
 
-This repository provides a skeleton of a Python package.  It is useful
-as a starting point to create a new package.
-
-After using this template to create a new package, run the following
-command to adapt the package name::
-
-     $ python3 init.py <name>
+This package provides a collection of small helper functions and
+classes.
 
 
 System requirements
