@@ -12,6 +12,24 @@ import re
 
 class Time(float):
     """Human readable time intervals.
+
+    The value is a :class:`float` that denotes the time in seconds.
+
+    >>> t1 = Time(4500)
+    >>> str(t1)
+    '1.250 h'
+    >>> t2 = Time("1.5 d")
+    >>> t2
+    129600.0
+    >>> t3 = Time("36 h")
+    >>> t3 == t2
+    True
+    >>> t4 = Time(1/200)
+    >>> str(t4)
+    '5.000 ms'
+    >>> t5 = 0.5*Time("1 h") + 5*Time("15 min")
+    >>> str(t5)
+    '1.750 h'
     """
     second = 1
     minute = 60*second
@@ -64,6 +82,28 @@ class Time(float):
 
 class MemorySize(int):
     """Human readable amounts of memory.
+
+    The value is an :class:`int` that denotes the number of bytes.
+
+    >>> s1 = MemorySize(2)
+    >>> str(s1)
+    '2 B'
+    >>> s2 = MemorySize("2.0 B")
+    >>> s2
+    2
+    >>> s2 == s1
+    True
+    >>> s3 = MemorySize(33117290228613)
+    >>> str(s3)
+    '30.12 TiB'
+    >>> s4 = MemorySize("1 PiB") + 3*MemorySize("128 TiB")
+    >>> str(s4)
+    '1.38 PiB'
+    >>> s5 = s4 - MemorySize("512 TiB")
+    >>> str(s5)
+    '896.00 TiB'
+    >>> s5
+    985162418487296
     """
     sizeB = 1
     sizeKiB = 1024*sizeB
