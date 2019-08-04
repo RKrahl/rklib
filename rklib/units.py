@@ -13,7 +13,7 @@ import re
 class Time(float):
     """Human readable time intervals.
 
-    The value is a :class:`float` that denotes the time in seconds.
+    The value is a :class:`float` that indicates the time in seconds.
 
     >>> t1 = Time(4500)
     >>> str(t1)
@@ -83,7 +83,7 @@ class Time(float):
 class MemorySize(int):
     """Human readable amounts of memory.
 
-    The value is an :class:`int` that denotes the number of bytes.
+    The value is an :class:`int` that indicates the number of bytes.
 
     >>> s1 = MemorySize(2)
     >>> str(s1)
