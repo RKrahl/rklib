@@ -107,6 +107,8 @@ setup(
         "Programming Language :: Python :: 3.5",
         "Programming Language :: Python :: 3.6",
         "Programming Language :: Python :: 3.7",
+        "Programming Language :: Python :: 3.8",
+        "Programming Language :: Python :: 3.9",
         # "Topic :: ?",
     ],
     cmdclass = {'build_py': build_py, 'sdist': sdist, 'init_py': init_py},
