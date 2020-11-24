@@ -97,6 +97,7 @@ setup(
     license = "Apache-2.0",
     requires = [],
     packages = ["rklib"],
+    scripts = ["scripts/filelock.py"],
     classifiers = [
         "Development Status :: 1 - Planning",
         # "Intended Audience :: ?",
