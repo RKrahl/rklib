@@ -101,7 +101,6 @@ setup(
         "Development Status :: 1 - Planning",
         # "Intended Audience :: ?",
         "License :: OSI Approved :: Apache Software License",
-        "Operating System :: OS Independent",
         "Programming Language :: Python",
         "Programming Language :: Python :: 3.4",
         "Programming Language :: Python :: 3.5",
