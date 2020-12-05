@@ -17,24 +17,30 @@ class filelock:
     """Acquire a lock on a file.
 
     Open a file and acquire a lock on it.  In read only mode the file
-    must and will be opened for reading.  In read/write mode, the
-    default, the file will be opened for reading and writing and is
-    created if it does not already exist.
+    must exist and will be opened for reading.  In read/write mode,
+    the default, the file will be opened for reading and writing and
+    is created if it does not already exist.
+
+    This class will never wait for the lock to become available but
+    rather raise :class:`AlreadyLockedError` if the file is already
+    locked.
 
     :param path: the path to the file.  This will be passed to
-        :func:`os.open`, which accepts a path-like object for Python
-        3.6 or newer.
+        :func:`os.open`, which accepts a :class:`str` or, for Python
+        3.6 and newer, a path-like object.
     :type path: :class:`str` or path-like
     :param mode: either :const:`fcntl.LOCK_EX` to acquire an exclusive
-        lock or :const:`fcntl.LOCK_SH` to acquire a shared lock.
+        lock or :const:`fcntl.LOCK_SH` to acquire a shared lock.  The
+        mode will be combined with :const:`fcntl.LOCK_NB`.
     :type mode: :class:`int`
     :param ro: read only mode.
     :type ro: :class:`bool`
+    :raise :class:`AlreadyLockedError`: if the file is already locked.
 
-    Read only mode may be needed of the current user does not have
-    write permission on the file or if the file resides on a read only
-    file system.  Read only mode is incompatible with acquiring an
-    exclusive lock.
+    Read only mode may be needed if the current user does not have
+    write permission for the file or if the file resides on a read
+    only file system.  Read only mode is incompatible with acquiring
+    an exclusive lock.
 
     This class may either be used as a context manager or by calling
     the constructor and the release() method explicitly.
@@ -69,7 +75,9 @@ class filelock:
                 raise
 
     def release(self):
-        """Close the file and release the lock.
+        """Close the file and release the lock.  
+
+        After releasing the lock this instance will become unusable.
         """
         if self.fd is not None:
             log.debug("releasing lock")
@@ -90,8 +98,11 @@ class filelock:
 
         :param mode: either :const:`fcntl.LOCK_EX` to acquire an
             exclusive lock or :const:`fcntl.LOCK_SH` to acquire a
-            shared lock.
+            shared lock.  The mode will be combined with
+            :const:`fcntl.LOCK_NB`.
         :type mode: :class:`int`
+        :raise :class:`AlreadyLockedError`: if the lock could not be
+            obtained in the new mode because the file is already locked.
 
         This is particularly useful to change an exclusive lock in a
         shared one or vice versa, without intermediately releasing the
