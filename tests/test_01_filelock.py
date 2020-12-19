@@ -13,19 +13,46 @@ from rklib.filelock import filelock, AlreadyLockedError
 log = logging.getLogger(__name__)
 
 
-def lock_file(sig_queue, res_queue, path, mode):
-    try:
-        log.debug("waiting for signal to acquire lock")
-        msg = sig_queue.get()
-        assert msg == "lock"
-        with filelock(path, mode):
-            log.debug("waiting for signal to release lock")
-            msg = sig_queue.get()
-            assert msg == "release"
-        res_queue.put(0)
-    except Exception as e:
-        log.error("%s: %s" % (type(e).__name__, e))
-        res_queue.put(e)
+class LockProcess:
+    """Spawn a subprocess to try locking a file.
+
+    Concurrent file locking can only by tried using multiple
+    processes.  This class set up a subprocess that troes to acquire a
+    lock on a file.  Furthermore, timing is crucial for the tests.
+    This class allows to synchronize acquiring and releasing the lock
+    in the child process.
+    """
+
+    def __init__(self, path, mode):
+        self.sig_queue = Queue()
+        self.res_queue = Queue()
+        self.child = Process(target=self._lock_file, args=(path, mode))
+        self.child.start()
+
+    def _lock_file(self, path, mode):
+        try:
+            log.debug("waiting for signal to acquire lock")
+            msg = self.sig_queue.get()
+            assert msg == "lock"
+            with filelock(path, mode):
+                log.debug("waiting for signal to release lock")
+                msg = self.sig_queue.get()
+                assert msg == "release"
+            self.res_queue.put(0)
+        except Exception as e:
+            log.error("%s: %s" % (type(e).__name__, e))
+            self.res_queue.put(e)
+
+    def lock(self):
+        self.sig_queue.put("lock")
+
+    def release(self):
+        self.sig_queue.put("release")
+
+    def join(self):
+        res = self.res_queue.get()
+        self.child.join()
+        return res
 
 
 @pytest.mark.parametrize("mode",
@@ -36,17 +63,12 @@ def test_filelock_single(tmpdir, mode):
     Nothing special.
     """
     lockfile = str(tmpdir.join("lock"))
-    sig_queue = Queue()
-    res_queue = Queue()
-    p = Process(target=lock_file, args=(sig_queue, res_queue, lockfile, mode))
-    p.start()
+    p = LockProcess(lockfile, mode)
     time.sleep(0.5)
-    sig_queue.put("lock")
+    p.lock()
     time.sleep(0.5)
-    sig_queue.put("release")
-    res = res_queue.get()
-    p.join()
-    assert res == 0
+    p.release()
+    assert p.join() == 0
 
 
 @pytest.mark.skipif(sys.version_info < (3, 6),
@@ -57,18 +79,12 @@ def test_filelock_single_path(tmpdir):
     filelock().  This requires Python 3.6 or newer.
     """
     lockfile = Path(tmpdir.join("lock"))
-    mode = fcntl.LOCK_SH
-    sig_queue = Queue()
-    res_queue = Queue()
-    p = Process(target=lock_file, args=(sig_queue, res_queue, lockfile, mode))
-    p.start()
+    p = LockProcess(lockfile, fcntl.LOCK_SH)
     time.sleep(0.5)
-    sig_queue.put("lock")
+    p.lock()
     time.sleep(0.5)
-    sig_queue.put("release")
-    res = res_queue.get()
-    p.join()
-    assert res == 0
+    p.release()
+    assert p.join() == 0
 
 
 @pytest.mark.parametrize("mode1",
@@ -84,27 +100,17 @@ def test_filelock_double(tmpdir, mode1, mode2):
     combinations, the second process should fail to acquire the lock.
     """
     lockfile = str(tmpdir.join("lock"))
-    sig1_queue = Queue()
-    res1_queue = Queue()
-    sig2_queue = Queue()
-    res2_queue = Queue()
-    p1 = Process(target=lock_file,
-                 args=(sig1_queue, res1_queue, lockfile, mode1))
-    p1.start()
-    p2 = Process(target=lock_file,
-                 args=(sig2_queue, res2_queue, lockfile, mode2))
-    p2.start()
+    p1 = LockProcess(lockfile, mode1)
+    p2 = LockProcess(lockfile, mode2)
     time.sleep(0.5)
-    sig1_queue.put("lock")
+    p1.lock()
     time.sleep(0.5)
-    sig2_queue.put("lock")
+    p2.lock()
     time.sleep(0.5)
-    sig1_queue.put("release")
-    sig2_queue.put("release")
-    res1 = res1_queue.get()
-    res2 = res2_queue.get()
-    p1.join()
-    p2.join()
+    p1.release()
+    p2.release()
+    res1 = p1.join()
+    res2 = p2.join()
     assert res1 == 0
     if mode1 == fcntl.LOCK_SH and mode2 == fcntl.LOCK_SH:
         assert res2 == 0
