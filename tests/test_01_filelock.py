@@ -4,6 +4,8 @@
 import fcntl
 import logging
 from multiprocessing import Process, Queue
+from pathlib import Path
+import sys
 import time
 import pytest
 from rklib.filelock import filelock, AlreadyLockedError
@@ -34,6 +36,28 @@ def test_filelock_single(tmpdir, mode):
     Nothing special.
     """
     lockfile = str(tmpdir.join("lock"))
+    sig_queue = Queue()
+    res_queue = Queue()
+    p = Process(target=lock_file, args=(sig_queue, res_queue, lockfile, mode))
+    p.start()
+    time.sleep(0.5)
+    sig_queue.put("lock")
+    time.sleep(0.5)
+    sig_queue.put("release")
+    res = res_queue.get()
+    p.join()
+    assert res == 0
+
+
+@pytest.mark.skipif(sys.version_info < (3, 6),
+                    reason="requires Python 3.6 or higher")
+def test_filelock_single_path(tmpdir):
+    """One single process acquiring a lock.
+    Same as last test, but pass a Path object as the path parameter to
+    filelock().  This requires Python 3.6 or newer.
+    """
+    lockfile = Path(tmpdir.join("lock"))
+    mode = fcntl.LOCK_SH
     sig_queue = Queue()
     res_queue = Queue()
     p = Process(target=lock_file, args=(sig_queue, res_queue, lockfile, mode))
