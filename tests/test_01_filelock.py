@@ -33,7 +33,7 @@ def test_filelock_single(tmpdir, mode):
     """One single process acquiring a lock.
     Nothing special.
     """
-    lockfile = tmpdir.join("lock")
+    lockfile = str(tmpdir.join("lock"))
     sig_queue = Queue()
     res_queue = Queue()
     p = Process(target=lock_file, args=(sig_queue, res_queue, lockfile, mode))
@@ -59,7 +59,7 @@ def test_filelock_double(tmpdir, mode1, mode2):
     This should work if both locks are shared.  In all other
     combinations, the second process should fail to acquire the lock.
     """
-    lockfile = tmpdir.join("lock")
+    lockfile = str(tmpdir.join("lock"))
     sig1_queue = Queue()
     res1_queue = Queue()
     sig2_queue = Queue()
