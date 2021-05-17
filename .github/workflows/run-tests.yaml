@@ -19,3 +19,18 @@ jobs:
       - name: Test with pytest
         run: |
           python setup.py test
+  Test 3.4:
+    runs-on: ubuntu-18.04
+    steps:
+      - name: Check out repository code
+        uses: actions/checkout@v2
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v2
+        with:
+          python-version: 3.4
+      - name: Install dependencies
+        run: |
+          pip install -r .gh_require
+      - name: Test with pytest
+        run: |
+          python setup.py test
