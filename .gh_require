@@ -1,0 +1,4 @@
+distutils-pytest
+pytest >=3.0.0
+setuptools_scm
+typing ; python_version == '3.4'

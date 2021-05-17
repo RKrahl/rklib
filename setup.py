@@ -21,7 +21,7 @@ try:
     version = setuptools_scm.get_version()
     with open(".version", "wt") as f:
         f.write(version)
-except ImportError:
+except (ImportError, LookupError):
     try:
         with open(".version", "rt") as f:
             version = f.read()
