@@ -1,4 +1,4 @@
-%bcond_with tests
+%bcond_without tests
 %global distname rklib
 
 Name:		python3-%{distname}
@@ -41,7 +41,8 @@ python3 setup.py test
 
 %files
 %defattr(-,root,root)
-%doc README.rst
+%doc README.rst CHANGES.rst
+%license LICENSE.txt
 %{python3_sitelib}/*
 
 

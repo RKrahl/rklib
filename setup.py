@@ -20,26 +20,28 @@ except (ImportError, AttributeError):
 try:
     import setuptools_scm
     version = setuptools_scm.get_version()
-    with open(".version", "wt") as f:
-        f.write(version)
 except (ImportError, LookupError):
     try:
-        with open(".version", "rt") as f:
-            version = f.read()
-    except OSError:
+        import _meta
+        version = _meta.__version__
+    except ImportError:
         distutils.log.warn("warning: cannot determine version number")
         version = "UNKNOWN"
 
-doclines = __doc__.strip().split("\n")
+docstring = __doc__
+doclines = docstring.strip().split("\n")
 
 
-class init_py(distutils.core.Command):
+class meta(distutils.core.Command):
 
-    description = "generate the main __init__.py file"
+    description = "generate meta files"
     user_options = []
-    init_template = '''"""%s"""
+    init_template = '''"""%(doc)s"""
 
-__version__ = "%s"
+__version__ = "%(version)s"
+'''
+    meta_template = '''
+__version__ = "%(version)s"
 '''
 
     def initialize_options(self):
@@ -52,22 +54,27 @@ __version__ = "%s"
                 self.package_dir[name] = convert_path(path)
 
     def run(self):
+        values = {
+            'version': self.distribution.get_version(),
+            'doc': docstring
+        }
         try:
             pkgname = self.distribution.packages[0]
         except IndexError:
             distutils.log.warn("warning: no package defined")
         else:
             pkgdir = Path(self.package_dir.get(pkgname, pkgname))
-            ver = self.distribution.get_version()
             if not pkgdir.is_dir():
                 pkgdir.mkdir()
             with (pkgdir / "__init__.py").open("wt") as f:
-                print(self.init_template % (__doc__, ver), file=f)
+                print(self.init_template % values, file=f)
+        with Path("_meta.py").open("wt") as f:
+            print(self.meta_template % values, file=f)
 
 
 class sdist(distutils.command.sdist.sdist):
     def run(self):
-        self.run_command('init_py')
+        self.run_command('meta')
         super().run()
         subst = {
             "version": self.distribution.get_version(),
@@ -83,7 +90,7 @@ class sdist(distutils.command.sdist.sdist):
 
 class build_py(distutils.command.build_py.build_py):
     def run(self):
-        self.run_command('init_py')
+        self.run_command('meta')
         super().run()
 
 
@@ -112,6 +119,6 @@ setup(
         "Programming Language :: Python :: 3.9",
         # "Topic :: ?",
     ],
-    cmdclass = dict(cmdclass, build_py=build_py, sdist=sdist, init_py=init_py)
+    cmdclass = dict(cmdclass, build_py=build_py, sdist=sdist, meta=meta)
 )
 
