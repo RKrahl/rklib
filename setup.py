@@ -29,7 +29,6 @@ except (ImportError, LookupError):
         version = "UNKNOWN"
 
 docstring = __doc__
-doclines = docstring.strip().split("\n")
 
 
 class meta(setuptools.Command):
@@ -97,20 +96,21 @@ class build_py(setuptools.command.build_py.build_py):
         super().run()
 
 
+with Path("README.rst").open("rt", encoding="utf8") as f:
+    readme = f.read()
+
 setup(
     name = "rklib",
     version = version,
-    description = doclines[0],
-    long_description = "\n".join(doclines[2:]),
+    description = docstring.split("\n")[0],
+    long_description = readme,
+    url = "https://github.com/RKrahl/rklib",
     author = "Rolf Krahl",
     author_email = "rolf@rotkraut.de",
-    url = "https://github.com/RKrahl/rklib",
     license = "Apache-2.0",
-    requires = [],
-    packages = ["rklib"],
     classifiers = [
         "Development Status :: 1 - Planning",
-        # "Intended Audience :: ?",
+        "Intended Audience :: Developers",
         "License :: OSI Approved :: Apache Software License",
         "Operating System :: OS Independent",
         "Programming Language :: Python",
@@ -120,8 +120,12 @@ setup(
         "Programming Language :: Python :: 3.7",
         "Programming Language :: Python :: 3.8",
         "Programming Language :: Python :: 3.9",
-        # "Topic :: ?",
+        "Programming Language :: Python :: 3.10",
+        "Programming Language :: Python :: 3.11",
+        "Topic :: Software Development :: Libraries :: Python Modules",
     ],
-    cmdclass = dict(cmdclass, build_py=build_py, sdist=sdist, meta=meta)
+    packages = ["rklib"],
+    python_requires = ">=3.4",
+    cmdclass = dict(cmdclass, build_py=build_py, sdist=sdist, meta=meta),
 )
 
