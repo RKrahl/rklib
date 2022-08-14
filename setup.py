@@ -4,11 +4,11 @@ This package provides a collection of small helper functions and
 classes.
 """
 
-import distutils.command.build_py
+import setuptools
+from setuptools import setup
+import setuptools.command.build_py
 import distutils.command.sdist
-import distutils.core
-from distutils.core import setup
-import distutils.log
+from distutils import log
 from glob import glob
 from pathlib import Path
 import string
@@ -20,26 +20,27 @@ except (ImportError, AttributeError):
 try:
     import setuptools_scm
     version = setuptools_scm.get_version()
-    with open(".version", "wt") as f:
-        f.write(version)
 except (ImportError, LookupError):
     try:
-        with open(".version", "rt") as f:
-            version = f.read()
-    except OSError:
-        distutils.log.warn("warning: cannot determine version number")
+        import _meta
+        version = _meta.__version__
+    except ImportError:
+        log.warn("warning: cannot determine version number")
         version = "UNKNOWN"
 
-doclines = __doc__.strip().split("\n")
+docstring = __doc__
 
 
-class init_py(distutils.core.Command):
+class meta(setuptools.Command):
 
-    description = "generate the main __init__.py file"
+    description = "generate meta files"
     user_options = []
-    init_template = '''"""%s"""
+    init_template = '''"""%(doc)s"""
 
-__version__ = "%s"
+__version__ = "%(version)s"
+'''
+    meta_template = '''
+__version__ = "%(version)s"
 '''
 
     def initialize_options(self):
@@ -52,22 +53,30 @@ __version__ = "%s"
                 self.package_dir[name] = convert_path(path)
 
     def run(self):
+        values = {
+            'version': self.distribution.get_version(),
+            'doc': docstring
+        }
         try:
             pkgname = self.distribution.packages[0]
         except IndexError:
-            distutils.log.warn("warning: no package defined")
+            log.warn("warning: no package defined")
         else:
             pkgdir = Path(self.package_dir.get(pkgname, pkgname))
-            ver = self.distribution.get_version()
             if not pkgdir.is_dir():
                 pkgdir.mkdir()
             with (pkgdir / "__init__.py").open("wt") as f:
-                print(self.init_template % (__doc__, ver), file=f)
+                print(self.init_template % values, file=f)
+        with Path("_meta.py").open("wt") as f:
+            print(self.meta_template % values, file=f)
 
 
+# Note: Do not use setuptools for making the source distribution,
+# rather use the good old distutils instead.
+# Rationale: https://rhodesmill.org/brandon/2009/eby-magic/
 class sdist(distutils.command.sdist.sdist):
     def run(self):
-        self.run_command('init_py')
+        self.run_command('meta')
         super().run()
         subst = {
             "version": self.distribution.get_version(),
@@ -81,26 +90,27 @@ class sdist(distutils.command.sdist.sdist):
                     outf.write(string.Template(inf.read()).substitute(subst))
 
 
-class build_py(distutils.command.build_py.build_py):
+class build_py(setuptools.command.build_py.build_py):
     def run(self):
-        self.run_command('init_py')
+        self.run_command('meta')
         super().run()
 
+
+with Path("README.rst").open("rt", encoding="utf8") as f:
+    readme = f.read()
 
 setup(
     name = "rklib",
     version = version,
-    description = doclines[0],
-    long_description = "\n".join(doclines[2:]),
+    description = docstring.split("\n")[0],
+    long_description = readme,
+    url = "https://github.com/RKrahl/rklib",
     author = "Rolf Krahl",
     author_email = "rolf@rotkraut.de",
-    url = "https://github.com/RKrahl/rklib",
     license = "Apache-2.0",
-    requires = [],
-    packages = ["rklib"],
     classifiers = [
         "Development Status :: 1 - Planning",
-        # "Intended Audience :: ?",
+        "Intended Audience :: Developers",
         "License :: OSI Approved :: Apache Software License",
         "Operating System :: OS Independent",
         "Programming Language :: Python",
@@ -110,8 +120,12 @@ setup(
         "Programming Language :: Python :: 3.7",
         "Programming Language :: Python :: 3.8",
         "Programming Language :: Python :: 3.9",
-        # "Topic :: ?",
+        "Programming Language :: Python :: 3.10",
+        "Programming Language :: Python :: 3.11",
+        "Topic :: Software Development :: Libraries :: Python Modules",
     ],
-    cmdclass = dict(cmdclass, build_py=build_py, sdist=sdist, init_py=init_py)
+    packages = ["rklib"],
+    python_requires = ">=3.4",
+    cmdclass = dict(cmdclass, build_py=build_py, sdist=sdist, meta=meta),
 )
 
