@@ -81,8 +81,8 @@ class sdist(distutils.command.sdist.sdist):
         subst = {
             "version": self.distribution.get_version(),
             "url": self.distribution.get_url(),
-            "description": self.distribution.get_description(),
-            "long_description": self.distribution.get_long_description(),
+            "description": docstring.split("\n")[0],
+            "long_description": docstring.split("\n", maxsplit=2)[2].strip(),
         }
         for spec in glob("*.spec"):
             with Path(spec).open('rt') as inf:
