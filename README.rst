@@ -14,7 +14,7 @@ Python:
 
 Required library packages:
 
-+ None
++ `setuptools`_
 
 Optional library packages:
 
@@ -52,6 +52,7 @@ implied.  See the License for the specific language governing
 permissions and limitations under the License.
 
 
+.. _setuptools: https://github.com/pypa/setuptools/
 .. _setuptools_scm: https://github.com/pypa/setuptools_scm/
 .. _pytest: https://pytest.org/
 .. _distutils-pytest: https://github.com/RKrahl/distutils-pytest
